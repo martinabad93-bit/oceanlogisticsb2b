@@ -141,6 +141,11 @@
         .broker-badge { background-color: #fee2e2; color: #ef4444; }
         [data-theme="dark"] .broker-panel { background-color: rgba(239, 68, 68, 0.1); }
 
+        /* Toggle Mode (Radio Buttons) */
+        .radio-group { display: flex; gap: 20px; margin-bottom: 20px; background: var(--table-head); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .radio-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text-main); }
+        .radio-label input[type="radio"] { accent-color: var(--brand-secondary); width: 16px; height: 16px; cursor: pointer; margin: 0; }
+
         /* Buttons */
         .actions-container { margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .btn { width: 100%; border: none; padding: 14px; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: var(--transition); box-shadow: var(--shadow-sm); }
@@ -155,28 +160,19 @@
         /* -------------------------------------------------------------
            ESTILOS EXCLUSIVOS PARA IMPRESIÓN (PDF MODELO FACTURA)
         ------------------------------------------------------------- */
-        #print-section { display: none; } /* Oculto en pantalla normal */
+        #print-section { display: none; }
         
         @media print {
-            /* Ocultar toda la interfaz web */
             header, .tabs-nav, .tab-content, .theme-toggle { display: none !important; }
             body, html { background: white !important; padding: 0 !important; margin: 0 !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important; }
             
-            /* Mostrar el contenedor de impresión */
             #print-section { 
-                display: block !important; 
-                width: 100%;
-                max-width: 800px;
-                margin: 0 auto;
-                color: #000;
-                font-size: 12px;
+                display: block !important; width: 100%; max-width: 800px; margin: 0 auto; color: #000; font-size: 12px;
             }
 
-            /* Estructura del PDF */
             .print-header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
-            
             .print-logo-box { display: flex; align-items: center; gap: 15px; }
-            .print-logo-box img { width: 100px; height: auto; } /* Tamaño del logo en PDF */
+            .print-logo-box img { width: 100px; height: auto; }
             .print-company-info h1 { margin: 0; font-size: 20px; color: #000; }
             .print-company-info p { margin: 2px 0; font-size: 12px; line-height: 1.2; }
             
@@ -195,7 +191,6 @@
             .print-table th { background-color: #f0f0f0; font-size: 11px; text-transform: uppercase; }
             .print-table .align-left { text-align: left; }
             
-            /* Simular altura de tabla para que parezca una factura completa */
             .print-table tbody tr { height: 30px; }
             .empty-row td { color: transparent; border-bottom: 1px solid #eee; }
 
@@ -236,15 +231,15 @@
 
     <!-- PESTAÑA 1: MATRIZ DE COSTOS -->
     <section id="tab-matrix" class="tab-content active">
-        <!-- Contenido idéntico a tu pestaña 1 original -->
         <div class="card">
             <h3 class="card-title">Configuración de Capacidad y Costos</h3>
-            <div class="form-row-2" style="margin-bottom: 20px;">
+            
+            <div class="form-row-2" style="margin-bottom: 15px;">
                 <div class="form-group">
                     <label for="container_type">Seleccionar Tipo de Contenedor</label>
                     <select id="container_type" onchange="updateContainerCapacity()">
                         <option value="2200">Contenedor 40' High Cube (40 HC)</option>
-                        <option value="2500">Contenedor 45' Standard (45 STD)</option>
+                        <option value="2500">Contenedor 45' High Cube (45 HC)</option> <!-- Cambio Solicitado -->
                     </select>
                 </div>
                 <div class="form-group">
@@ -255,8 +250,22 @@
                     </div>
                 </div>
             </div>
+
+            <!-- NUEVO: Selector de Modo de Costo -->
+            <label style="margin-bottom: 10px;">Modalidad de Costo Operativo</label>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="cost_mode" value="detailed" checked onchange="toggleCostMode()">
+                    Cálculo Detallado (Matriz)
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="cost_mode" value="fixed" onchange="toggleCostMode()">
+                    Costo Fijo (Revendedor)
+                </label>
+            </div>
             
-            <div class="table-container">
+            <!-- SECCIÓN 1: Tabla de Costos Detallada -->
+            <div id="detailed_costs_section" class="table-container">
                 <table>
                     <thead>
                         <tr><th>Fase Operativa</th><th>Concepto de Gasto</th><th style="width: 180px;">Costo (USD)</th></tr>
@@ -271,6 +280,18 @@
                 </table>
             </div>
 
+            <!-- SECCIÓN 2: Costo Fijo para Revendedor -->
+            <div id="fixed_cost_section" style="display: none; background: rgba(40, 134, 182, 0.05); padding: 20px; border-radius: 8px; border: 1px dashed var(--brand-secondary); margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0; max-width: 300px;">
+                    <label for="fixed_cft_cost">Costo Base por CFT (Otorgado por colega)</label>
+                    <div class="input-wrapper has-prefix has-suffix">
+                        <span class="input-prefix">$</span>
+                        <input type="number" id="fixed_cft_cost" value="10.00" step="0.5" oninput="calculateMatrix()">
+                        <span class="input-suffix">/ CFT</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group" style="max-width: 300px;">
                 <label for="matrix_tasa">Tasa Cambiaria (USD/DOP)</label>
                 <div class="input-wrapper has-prefix">
@@ -281,7 +302,7 @@
 
             <div class="matrix-summary-box">
                 <div class="matrix-stat">
-                    <h4>Costo Total Operativo</h4>
+                    <h4>Costo Total Proyectado</h4>
                     <p id="matrix_total_usd">$15,700.00</p>
                     <span id="matrix_total_dop" style="font-size: 12px; opacity: 0.85;">RD$ 949,850.00</span>
                 </div>
@@ -316,7 +337,7 @@
                     <div class="form-group"><label>Tarifa Cliente</label><div class="input-wrapper has-prefix has-suffix"><span class="input-prefix">$</span><input type="number" id="client_markup" value="12.50" step="0.25" oninput="calculateLogistics()"><span class="input-suffix">CFT</span></div></div>
                 </div>
 
-                <!-- NUEVO: Datos opcionales para el PDF -->
+                <!-- Datos opcionales para el PDF -->
                 <h3 class="card-title" style="margin-top:20px; font-size:15px; color:var(--text-muted); border-bottom:none;">Información para Recibo (Opcional)</h3>
                 <div class="form-group">
                     <label>Nombre del Cliente</label>
@@ -327,6 +348,7 @@
                     <div class="form-group"><label>Teléfono Cliente</label><input type="text" id="pdf_phone" placeholder="Ej. 809-555-5555"></div>
                 </div>
 
+                <!-- DATOS BROKER -->
                 <div class="card broker-panel">
                     <h4 class="card-title" style="font-size: 14px; margin-bottom: 12px; border:none; padding:0; color:#b91c1c;">
                         <span class="badge-preview broker-badge">Datos Broker</span> Rentabilidad Privada
@@ -421,7 +443,6 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Fila con datos -->
             <tr>
                 <td id="out_pcs">1</td>
                 <td>BOX</td>
@@ -430,7 +451,6 @@
                 <td id="out_rate">$0.00</td>
                 <td>QUOTE</td>
             </tr>
-            <!-- Filas en blanco para simular la tabla larga -->
             <tr class="empty-row"><td>.</td><td></td><td></td><td></td><td></td><td></td></tr>
             <tr class="empty-row"><td>.</td><td></td><td></td><td></td><td></td><td></td></tr>
             <tr class="empty-row"><td>.</td><td></td><td></td><td></td><td></td><td></td></tr>
@@ -489,27 +509,52 @@
         if(tabId === 'tab-calculator') calculateLogistics();
     }
 
+    // --- TOGGLE MODO DE COSTO ---
+    function toggleCostMode() {
+        const mode = document.querySelector('input[name="cost_mode"]:checked').value;
+        const detailedSection = document.getElementById('detailed_costs_section');
+        const fixedSection = document.getElementById('fixed_cost_section');
+        
+        if (mode === 'detailed') {
+            detailedSection.style.display = 'block';
+            fixedSection.style.display = 'none';
+        } else {
+            detailedSection.style.display = 'none';
+            fixedSection.style.display = 'block';
+        }
+        calculateMatrix();
+    }
+
     function updateContainerCapacity() {
         document.getElementById('matrix_capacity').value = document.getElementById('container_type').value;
         calculateMatrix();
     }
 
-    // --- CÁLCULOS ---
+    // --- CÁLCULOS PRINCIPALES ---
     let currentCostPerCFT = 7.14; 
     let currentTotalCFT = 0;
     let currentTotalUSD = 0;
 
     function calculateMatrix() {
-        const origen = parseFloat(document.getElementById('cost_origen').value) || 0;
-        const maritimo = parseFloat(document.getElementById('cost_maritimo').value) || 0;
-        const destino = parseFloat(document.getElementById('cost_destino').value) || 0;
-        const aduana = parseFloat(document.getElementById('cost_aduana').value) || 0;
-        const milla = parseFloat(document.getElementById('cost_milla').value) || 0;
+        const mode = document.querySelector('input[name="cost_mode"]:checked').value;
         const tasa = parseFloat(document.getElementById('matrix_tasa').value) || 60.50;
         const capacity = parseFloat(document.getElementById('matrix_capacity').value) || 2200;
+        let totalUSD = 0;
 
-        const totalUSD = origen + maritimo + destino + aduana + milla;
-        currentCostPerCFT = totalUSD / capacity;
+        if (mode === 'detailed') {
+            const origen = parseFloat(document.getElementById('cost_origen').value) || 0;
+            const maritimo = parseFloat(document.getElementById('cost_maritimo').value) || 0;
+            const destino = parseFloat(document.getElementById('cost_destino').value) || 0;
+            const aduana = parseFloat(document.getElementById('cost_aduana').value) || 0;
+            const milla = parseFloat(document.getElementById('cost_milla').value) || 0;
+            
+            totalUSD = origen + maritimo + destino + aduana + milla;
+            currentCostPerCFT = totalUSD / capacity;
+        } else {
+            // Modo Revendedor (Costo Fijo)
+            currentCostPerCFT = parseFloat(document.getElementById('fixed_cft_cost').value) || 0;
+            totalUSD = currentCostPerCFT * capacity; // Proyección matemática para que la caja azul mantenga sentido
+        }
 
         document.getElementById('matrix_total_usd').innerText = `$${totalUSD.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
         document.getElementById('matrix_total_dop').innerText = `RD$ ${(totalUSD * tasa).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
@@ -535,7 +580,7 @@
         document.getElementById('client_rate_per_cft').innerText = `$${clientRate.toFixed(2)} USD`;
         document.getElementById('client_total_usd').innerText = `$${currentTotalUSD.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
 
-        // Panel Broker
+        // Panel Broker (Rentabilidad)
         const profitPerCFT = clientRate - currentCostPerCFT;
         const totalProfit = currentTotalCFT * profitPerCFT;
         const brokerProfitEl = document.getElementById('broker_profit_cft');
@@ -549,16 +594,32 @@
         totalProfitEl.style.color = totalProfit >= 0 ? 'var(--success)' : '#ef4444';
     }
 
-    // --- PREPARAR PDF Y DATOS ---
+    // --- PREPARAR PDF ---
     function prepareAndPrint() {
         // 1. Obtener fecha actual
         const today = new Date();
         document.getElementById('out_date').innerText = today.toLocaleDateString();
         
-        // 2. Generar número aleatorio corto para la cotización
-        document.getElementById('out_doc_no').innerText = Math.floor(1000 + Math.random() * 9000);
+        // 2. Generar secuencia correlativa
+        let sequence = localStorage.getItem('pcl_quote_sequence');
+        if (!sequence) {
+            sequence = 1000;
+        } else {
+            sequence = parseInt(sequence) + 1;
+        }
+        localStorage.setItem('pcl_quote_sequence', sequence);
 
-        // 3. Pasar datos de inputs opcionales al molde de impresión
+        // 3. Identificar la modalidad para el prefijo (Broker vs Directo)
+        const mode = document.querySelector('input[name="cost_mode"]:checked').value;
+        const modeIdentifier = mode === 'fixed' ? 'BRK' : 'DIR';
+
+        // 4. Crear el formato PCL-[TIPO]-AAMM-SECUENCIA
+        const year = today.getFullYear().toString().slice(-2);
+        const month = (today.getMonth() + 1).toString().padStart(2, '0');
+        const quoteNumber = `PCL-${modeIdentifier}-${year}${month}-${sequence}`;
+        document.getElementById('out_doc_no').innerText = quoteNumber;
+
+        // 5. Pasar datos de inputs opcionales al molde de impresión
         const clientName = document.getElementById('pdf_client_name').value;
         const clientPhone = document.getElementById('pdf_phone').value;
         const desc = document.getElementById('pdf_description').value;
@@ -567,7 +628,7 @@
         document.getElementById('out_phone').innerText = clientPhone || "N/A";
         document.getElementById('out_desc').innerText = desc ? desc.toUpperCase() : "CARGA GENERAL LCL";
 
-        // 4. Pasar datos matemáticos calculados
+        // 6. Pasar datos matemáticos calculados
         document.getElementById('out_pcs').innerText = document.getElementById('cargo_qty').value || "1";
         const cftTotalStr = currentTotalCFT.toFixed(2);
         const usdTotalStr = "$" + currentTotalUSD.toLocaleString('en-US', {minimumFractionDigits: 2});
@@ -579,9 +640,9 @@
         document.getElementById('out_sub').innerText = usdTotalStr;
         document.getElementById('out_total').innerHTML = `<strong>${usdTotalStr}</strong>`;
 
-        // 5. Lanzar ventana de impresión (el CSS @media print hace el resto)
+        // 7. Lanzar ventana de impresión
         window.print();
-    }
+    }    
 
     // --- EXPORTAR A WHATSAPP ---
     function sendWhatsAppExport() {
@@ -606,7 +667,9 @@
         window.open(`https://api.whatsapp.com/send?text=${cleanEncodedText}`, '_blank');
     }
 
-    window.onload = function() { calculateMatrix(); };
+    window.onload = function() { 
+        calculateMatrix(); 
+    };
 </script>
 
 </body>
