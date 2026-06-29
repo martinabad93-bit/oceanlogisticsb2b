@@ -596,30 +596,10 @@
 
     // --- PREPARAR PDF ---
     function prepareAndPrint() {
-        // 1. Obtener fecha actual
         const today = new Date();
         document.getElementById('out_date').innerText = today.toLocaleDateString();
-        
-        // 2. Generar secuencia correlativa
-        let sequence = localStorage.getItem('pcl_quote_sequence');
-        if (!sequence) {
-            sequence = 1000;
-        } else {
-            sequence = parseInt(sequence) + 1;
-        }
-        localStorage.setItem('pcl_quote_sequence', sequence);
+        document.getElementById('out_doc_no').innerText = Math.floor(1000 + Math.random() * 9000);
 
-        // 3. Identificar la modalidad para el prefijo (Broker vs Directo)
-        const mode = document.querySelector('input[name="cost_mode"]:checked').value;
-        const modeIdentifier = mode === 'fixed' ? 'BRK' : 'DIR';
-
-        // 4. Crear el formato PCL-[TIPO]-AAMM-SECUENCIA
-        const year = today.getFullYear().toString().slice(-2);
-        const month = (today.getMonth() + 1).toString().padStart(2, '0');
-        const quoteNumber = `PCL-${modeIdentifier}-${year}${month}-${sequence}`;
-        document.getElementById('out_doc_no').innerText = quoteNumber;
-
-        // 5. Pasar datos de inputs opcionales al molde de impresión
         const clientName = document.getElementById('pdf_client_name').value;
         const clientPhone = document.getElementById('pdf_phone').value;
         const desc = document.getElementById('pdf_description').value;
@@ -628,7 +608,6 @@
         document.getElementById('out_phone').innerText = clientPhone || "N/A";
         document.getElementById('out_desc').innerText = desc ? desc.toUpperCase() : "CARGA GENERAL LCL";
 
-        // 6. Pasar datos matemáticos calculados
         document.getElementById('out_pcs').innerText = document.getElementById('cargo_qty').value || "1";
         const cftTotalStr = currentTotalCFT.toFixed(2);
         const usdTotalStr = "$" + currentTotalUSD.toLocaleString('en-US', {minimumFractionDigits: 2});
@@ -640,9 +619,8 @@
         document.getElementById('out_sub').innerText = usdTotalStr;
         document.getElementById('out_total').innerHTML = `<strong>${usdTotalStr}</strong>`;
 
-        // 7. Lanzar ventana de impresión
         window.print();
-    }    
+    }
 
     // --- EXPORTAR A WHATSAPP ---
     function sendWhatsAppExport() {
